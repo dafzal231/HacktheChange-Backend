@@ -1,5 +1,5 @@
 import { ArgsType, Field, InputType, ObjectType, ID } from "type-graphql";
-import { modelOptions, prop } from "@typegoose/typegoose";
+import { modelOptions, prop, getModelForClass } from "@typegoose/typegoose";
 import mongoose from "mongoose";
 
 @ObjectType()
@@ -47,4 +47,5 @@ export class TagsArgs{
 }
 
 
+export const Tag = getModelForClass(TagType);
 

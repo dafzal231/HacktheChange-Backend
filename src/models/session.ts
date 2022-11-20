@@ -1,6 +1,6 @@
 import {Field, ID, InputType, ObjectType} from "type-graphql";
 import {getModelForClass, modelOptions, prop} from "@typegoose/typegoose";
-import { MessageType } from "../resolvers/types/Message"
+import { MessageType } from "./types/session/Message"
 import mongoose, { ObjectId } from "mongoose";
 
 
@@ -10,33 +10,29 @@ import mongoose, { ObjectId } from "mongoose";
  */
 
  @ObjectType()
+ @modelOptions({
+    schemaOptions: { 
+        timestamps: true,
+        collection: "sessions"
+    }
+ })
  export class SessionType{
+    @Field(type => ID)
+    readonly _id: mongoose.Types.ObjectId
+    @Field()
+    readonly createdAt: Date
+
+    @Field(returns => [MessageType], {nullable: true })
+    @prop({ required: true, type: MessageType, default: []})
+    messages: mongoose.Types.Array<MessageType>
  
-     @Field(returns => [MessageType], {nullable: true })
-     @prop({ required: true, type: MessageType, default: []})
-     messages: mongoose.Types.Array<MessageType>
- 
-     @Field(returns => [ID])
-     @prop({ required: true })
-     readonly _ids: mongoose.Types.Array<ObjectId>
+    @Field(returns => [ID])
+    @prop({ required: true, type: String, default: []})
+    ids: mongoose.Types.Array<string>
  }
 
 export const Session = getModelForClass(SessionType);
 
-/**
- * When we want to create a new user we don't have _id or createdAt so we need to create this input type
- */
 
-type SessionTypeOmit = "messages"
-
- /**
-  * When we want to create a new user we don't have _id or createdAt so we need to create this input type
-  */
- @InputType()
- export class AddSession implements Omit<SessionType, SessionTypeOmit> {
-
-    @Field(returns => ID)
-    readonly _ids: mongoose.Types.Array<ObjectId>
-}
 
 

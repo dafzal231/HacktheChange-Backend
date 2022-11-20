@@ -1,10 +1,10 @@
 import { Arg, Args, Authorized, Ctx, Mutation, Query, Resolver, Int } from "type-graphql";
 import { AddUser, User, UserType } from "../models/user";
-import jwt from 'jsonwebtoken';
 import { AuthPayload } from "./types/AuthPayload";
 import { Context } from "./types/Context";
-import { TagType, TagInput, TagsArgs } from "../models/tag";
+import { TagsArgs, Tag } from "../models/types/user/Tag";
 import { createToken } from "../utils/auth";
+import { Session } from "../models/session";
 
 @Resolver()
 export class UserResolver {
@@ -59,6 +59,13 @@ export class UserResolver {
 
         const user = await User.findById(userId);
 
+        for (let i = 0; i < tags.length; i++){
+            const tag = tags[i];
+            const existing = Tag.findOne({ name: tag.name });
+            if (!existing) continue;
+            await Tag.create(tag);
+        }
+
         user.tags.push(...tags);
         await user.save();
         
@@ -111,6 +118,87 @@ export class UserResolver {
 
         const token = createToken({ id: userId });
         return new AuthPayload(token);
+    }
+
+    @Authorized()
+    @Mutation(type => AuthPayload)
+    async makeRequest(
+        @Ctx() ctx: Context,
+        @Arg('toUserId') toUserId: string
+    ){
+
+        const { userId } = ctx.req;
+
+        const toUser = await User.findById(toUserId);
+        const user = await User.findById(userId);
+
+        
+        const request = {
+            fromId: userId,
+            toId: toUserId,
+            accepted: false
+        }
+
+        toUser.requests.push(request);
+        user.requests.push(request);
+        
+
+        await toUser.save();
+        await user.save();
+
+        const token = createToken({ id: userId });
+
+        return new AuthPayload(token)
+    }
+
+    @Authorized()
+    @Mutation(type => AuthPayload)
+    async confirmRequest(
+        @Ctx() ctx: Context,
+        @Arg("fromId") fromId: string,
+        @Arg("confirmation") confirmation: boolean
+    ){
+
+        const { userId } = ctx.req;
+        const user = await User.findById(userId);
+        const fromUser = await User.findById(fromId);
+
+        if (!fromUser){
+            throw Error("Not found!")
+        }
+
+        // Find request to me
+        const fromRequestIdx = fromUser.requests.findIndex( req => req.toId === userId );
+        if (fromRequestIdx === -1){
+            throw Error("no request")
+        }
+
+        // Request in my requests
+        const userRequestIdx = user.requests.findIndex( req => req.toId === userId )
+        
+        user.requests[userRequestIdx].accepted = confirmation;
+        fromUser.requests[fromRequestIdx].accepted = confirmation;
+
+        
+
+        if (confirmation){
+            const sessionObj = {
+                ids: [user._id.toString(), fromUser._id.toString()]
+            }
+    
+            const session = await Session.create(sessionObj);
+
+            user.requests[userRequestIdx].sessionId = session._id.toString();
+            fromUser.requests[fromRequestIdx].sessionId = session._id.toString();
+        }
+
+        await user.save()
+        await fromUser.save();
+
+        const token = createToken({ id: userId });
+
+        return new AuthPayload(token);
+
     }
 
     @Authorized()

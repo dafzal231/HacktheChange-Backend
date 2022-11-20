@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 @ObjectType()
 @modelOptions({
   schemaOptions: {
+    collection: "tags",
     timestamps: true
   }
 })

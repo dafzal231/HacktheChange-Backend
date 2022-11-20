@@ -1,7 +1,8 @@
 import {Field, ID, InputType, Int, ObjectType} from "type-graphql";
 import {getModelForClass, modelOptions, prop} from "@typegoose/typegoose";
 import mongoose from "mongoose";
-import { TagType } from "../resolvers/types/tag";
+import { TagType } from "./types/user/Tag";
+import { RequestType } from "./types/user/Request";
 
 
 /**
@@ -10,7 +11,10 @@ import { TagType } from "../resolvers/types/tag";
  */
 @ObjectType()
 @modelOptions({
-    schemaOptions: {timestamps: true},
+    schemaOptions: {
+        timestamps: true,
+        collection: "users"
+    },
 })
 export class UserType {
     @Field(returns => ID)
@@ -44,9 +48,9 @@ export class UserType {
     tags: mongoose.Types.Array<TagType>
 
     // string of ids for users (users that are requesting)
-    @Field(type => [String], { nullable: true })
-    @prop({ required: true, default: [], type: String })
-    requests: mongoose.Types.Array<string>
+    @Field(type => [RequestType], { nullable: true })
+    @prop({ required: true, default: [], type: RequestType })
+    requests: mongoose.Types.Array<RequestType>
 
     @Field(type => Int, { nullable: true })
     @prop({ required: false })

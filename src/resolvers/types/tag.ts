@@ -1,5 +1,5 @@
 import { Field, ObjectType } from "type-graphql";
-import { modelOptions } from "@typegoose/typegoose";
+import {getModelForClass, modelOptions, prop} from "@typegoose/typegoose";
 
 @ObjectType()
 @modelOptions({
@@ -18,4 +18,5 @@ export class TagType{
   type: string
 }
 
+export const Tag = getModelForClass(TagType);
 

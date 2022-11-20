@@ -1,7 +1,7 @@
 import {Field, ID, InputType, Int, ObjectType} from "type-graphql";
 import {getModelForClass, modelOptions, prop} from "@typegoose/typegoose";
 import mongoose from "mongoose";
-import { TagType } from "./tag";
+import { TagType } from "../resolvers/types/tag";
 
 
 /**

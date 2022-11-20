@@ -2,6 +2,10 @@ import {Field, ID, InputType, ObjectType} from "type-graphql";
 import {getModelForClass, modelOptions, prop} from "@typegoose/typegoose";
 import mongoose from "mongoose";
 
+/**
+ * From this two decorations we can generate the graphql schema and the mongoose schema with single class!
+ * For more refer to typegoose docs and type-graphql docs
+ */
 @ObjectType()
 @modelOptions({
     schemaOptions: {timestamps: true},
@@ -27,7 +31,7 @@ export class UserType {
     email: string;
 
     @Field({nullable: true})
-    @prop({required: false, minlength: 6, maxlength: 16, match: /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]$/})
+    @prop({required: false, minlength: 6})
     password: string;
 
     @Field()
@@ -36,6 +40,9 @@ export class UserType {
 
 export const User = getModelForClass(UserType);
 
+/**
+ * When we want to create a new user we don't have _id or createdAt so we need to create this input type
+ */
 @InputType()
 export class AddUser implements UserType {
     readonly _id: mongoose.Schema.Types.ObjectId;

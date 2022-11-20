@@ -1,14 +1,20 @@
-import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from "type-graphql";
+import { Arg, Args, Authorized, Ctx, Mutation, Query, Resolver, Int } from "type-graphql";
 import { AddUser, User, UserType } from "../models/user";
 import jwt from 'jsonwebtoken';
 import { AuthPayload } from "./types/AuthPayload";
-import {Context} from "./types/Context";
+import { Context } from "./types/Context";
+import { TagType, TagInput, TagsArgs } from "../models/tag";
+import { createToken } from "../utils/auth";
 
 @Resolver()
 export class UserResolver {
-    @Query(returns => String)
-    async getUser() {
-        return "hi";
+    @Authorized()
+    @Query(returns => UserType)
+    async getUser(@Ctx() context: Context) {
+        const { userId } = context.req;
+        const user = await User.findById(userId);
+
+        return user;
     }
 
     @Mutation(returns => AuthPayload)
@@ -23,7 +29,7 @@ export class UserResolver {
 
         const user = new User(data);
         await user.save();
-        const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: "1 year"});
+        const token = createToken({ id: user._id });
 
         return new AuthPayload(token);
     }
@@ -37,16 +43,76 @@ export class UserResolver {
             throw Error("Invalid email or password");
         }
 
-        const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: "1 year"});
+        const token = createToken({ id: user._id });
 
         return new AuthPayload(token);
     }
 
+    @Authorized()
+    @Mutation(type => AuthPayload)
+    async addTags(
+        @Ctx() context: Context,
+        @Args() { tags } : TagsArgs
+    ){
+        // console.log(tags);
+        const { userId } = context.req;
 
-    /**
-     * when we pass "Authorization" header with the token then we can access the userid from the context as shown below
-     * @param context
-     */
+        const user = await User.findById(userId);
+
+        user.tags.push(...tags);
+        await user.save();
+        
+        const token = createToken({ id: userId })
+
+        return new AuthPayload(token);
+    }
+
+    /*
+    * Adds the value to the current credits i.e. negative value will decrease credits, positive value will increase credits.
+    */
+    @Authorized()
+    @Mutation(type => AuthPayload)
+    async updateCredits(
+        @Arg("value", type => Int) value: number,
+        @Ctx() ctx: Context
+    ){
+        const { userId } = ctx.req;
+
+        const user = await User.findById(userId);
+        if (user.credits === undefined){
+            user.credits = value;
+        } else {
+            user.credits += value;
+        }
+        await user.save();
+
+        const token = createToken({ id: userId });
+        return new AuthPayload(token);
+    }
+
+    /*
+    * Adds the value to the current reputation i.e. negative value will decrease credits, positive value will increase credits.
+    */
+    @Authorized()
+    @Mutation(type => AuthPayload)
+    async updateReputation(
+        @Arg("value", type => Int) value: number,
+        @Ctx() ctx: Context
+    ){
+        const { userId } = ctx.req;
+
+        const user = await User.findById(userId);
+        if (user.reputation === undefined){
+            user.reputation = value;
+        } else {
+            user.reputation += value;
+        }
+        await user.save();
+
+        const token = createToken({ id: userId });
+        return new AuthPayload(token);
+    }
+
     @Authorized()
     @Query(returns => [UserType])
     async getUsers(@Ctx() context: Context) {

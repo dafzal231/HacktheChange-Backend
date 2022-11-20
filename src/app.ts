@@ -35,7 +35,7 @@ const init = async () => {
                 try {
                     const user = await <JWTUserPayload>verify(token, process.env.JWT_SECRET);
                     req.userId = user.id;
-                    console.log('user id', user.id);
+                    // console.log('user id', user.id);
                 } catch (e) {
                     // ignoring
                 }

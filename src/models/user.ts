@@ -1,6 +1,8 @@
-import {Field, ID, InputType, ObjectType} from "type-graphql";
+import {Field, ID, InputType, Int, ObjectType} from "type-graphql";
 import {getModelForClass, modelOptions, prop} from "@typegoose/typegoose";
 import mongoose from "mongoose";
+import { TagType } from "./tag";
+
 
 /**
  * From this two decorations we can generate the graphql schema and the mongoose schema with single class!
@@ -35,19 +37,35 @@ export class UserType {
     password: string;
 
     @Field()
-    readonly createdAt: Date;
+    createdAt: Date;
+
+    @Field(type => [TagType], { nullable: true })
+    @prop({ required: true, type: TagType, default: []})
+    tags: mongoose.Types.Array<TagType>
+
+    // string of ids for users (users that are requesting)
+    @Field(type => [String], { nullable: true })
+    @prop({ required: true, default: [], type: String })
+    requests: mongoose.Types.Array<string>
+
+    @Field(type => Int, { nullable: true })
+    @prop({ required: false })
+    credits: number
+
+    @Field(type => Int, { nullable: true })
+    @prop({ required: false })
+    reputation: number
 }
 
 export const User = getModelForClass(UserType);
+
+type UserTypeOmit = "_id" | "createdAt" | "tags" | "requests" | "credits" | "reputation"
 
 /**
  * When we want to create a new user we don't have _id or createdAt so we need to create this input type
  */
 @InputType()
-export class AddUser implements UserType {
-    readonly _id: mongoose.Schema.Types.ObjectId;
-    readonly createdAt: Date;
-
+export class AddUser implements Omit<UserType, UserTypeOmit> {
     @Field()
     firstName: string;
 

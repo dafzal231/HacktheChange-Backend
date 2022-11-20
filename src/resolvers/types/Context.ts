@@ -1,7 +1,7 @@
 import {Request, Response} from "express";
 import {UserType} from "../../models/User";
 
-export interface MyRequest extends Request {
+export interface CustomRequest extends Request {
     adminUser?: UserType,
     userId?: String
 }
@@ -10,6 +10,6 @@ export interface MyRequest extends Request {
  * Returns express request and response to the query
  */
 export interface Context {
-    req: MyRequest,
+    req: CustomRequest,
     res: Response
 }

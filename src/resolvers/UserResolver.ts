@@ -1,7 +1,7 @@
-import {Arg, Ctx, Mutation, Query, Resolver} from "type-graphql";
-import {AddUser, User, UserType} from "../models/user";
+import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from "type-graphql";
+import { AddUser, User, UserType } from "../models/user";
 import jwt from 'jsonwebtoken';
-import {AuthPayload} from "./types/AuthPayload";
+import { AuthPayload } from "./types/AuthPayload";
 import {Context} from "./types/Context";
 
 @Resolver()
@@ -19,6 +19,8 @@ export class UserResolver {
             throw Error("User already exist with this email");
         }
 
+        // TODO: encrypt password before saving.
+
         const user = new User(data);
         await user.save();
         const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: "1 year"});
@@ -26,6 +28,7 @@ export class UserResolver {
         return new AuthPayload(token);
     }
 
+    
     @Query(type => AuthPayload)
     async loginUser(@Arg('email') email: string, @Arg('password') password: string) {
         const user = await User.findOne({email, password});
@@ -44,12 +47,9 @@ export class UserResolver {
      * when we pass "Authorization" header with the token then we can access the userid from the context as shown below
      * @param context
      */
+    @Authorized()
     @Query(returns => [UserType])
     async getUsers(@Ctx() context: Context) {
-        if (!context.req?.userId) {
-            throw Error("Unauthorized");
-        }
-
         return User.find();
     }
 }

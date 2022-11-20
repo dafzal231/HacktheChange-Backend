@@ -7,7 +7,7 @@ import mongoose from "mongoose";
 import bodyParser from "body-parser";
 import cors from "cors";
 import {schema} from "./resolvers";
-import {Context, MyRequest} from "./resolvers/types/Context";
+import {Context, CustomRequest} from "./resolvers/types/Context";
 import {verify} from "jsonwebtoken";
 
 const app = express();
@@ -29,7 +29,7 @@ const init = async () => {
          * When "Authorization" header is present, it will parse user id from the token and add it to the context
          * so we can use it in resolvers (see UserResolver.ts for more)
          */
-        app.use("/graphql", async (req: MyRequest, res: Response, next: NextFunction) => {
+        app.use("/graphql", async (req: CustomRequest, res: Response, next: NextFunction) => {
             const token = req.headers.authorization;
             if (token) {
                 try {
@@ -52,6 +52,8 @@ const init = async () => {
                 return err;
             },
         });
+
+        await server.start()
 
         server.applyMiddleware({app});
 

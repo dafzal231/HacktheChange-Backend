@@ -12,6 +12,7 @@
     "skipLibCheck":true,
     "sourceMap": true,
     "outDir": "dist",
+    "rootDir": "src",
     "baseUrl": ".",
     "lib": ["es2018", "esnext.asynciterable"]
   },

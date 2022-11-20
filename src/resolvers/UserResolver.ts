@@ -35,7 +35,7 @@ export class UserResolver {
     }
 
     
-    @Query(type => AuthPayload)
+    @Mutation(type => AuthPayload)
     async loginUser(@Arg('email') email: string, @Arg('password') password: string) {
         const user = await User.findOne({email, password});
 
